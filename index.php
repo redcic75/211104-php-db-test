@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 
 <head>
     <meta charset="UTF-8">
@@ -11,16 +11,32 @@
 
 <body>
     <h1 class="display-1 text-center mb-5 p-3">Liste des abonnées</h1>
+
+    <!-- Connect to database, add $_POST data, retrieve all the data, store it in $dbarray for ulterior display -->
+    <?php
+    $pdo = new PDO('mysql:dbname=pdo_test;host=127.0.0.1', 'root', '');
+
+    if ($_POST) {
+        $req_add = $pdo->prepare('INSERT INTO subscribers VALUES (NULL, ?, ?, ?, ?, NULL, \'\')');
+        $req_add->execute(array($_POST['surname'], $_POST['lastname'], $_POST['email'], $_POST['password']));
+    }
+
+    $req_disp = $pdo->prepare('SELECT * FROM subscribers');
+    $req_disp->execute();
+    $dbarray = $req_disp->fetchAll();
+    ?>
+
+    <!-- Forms to input new data into database -->
     <section class="container my-5">
         <form action="index.php" method="POST">
             <div class="row py-3">
                 <div class="input col-xs-12 col-sm-6 col-md-3">
                     <label for="surname" class="form-label">Prénom</label>
-                    <input type="text" id="surname" name="prenom" class="form-control">
+                    <input type="text" id="surname" name="surname" class="form-control">
                 </div>
                 <div class="input col-xs-12 col-sm-6 col-md-3">
-                    <label for="name" class="form-label">Nom</label>
-                    <input type="text" id="name" name="nom" class="form-control">
+                    <label for="lastname" class="form-label">Nom</label>
+                    <input type="text" id="lastname" name="lastname" class="form-control">
                 </div>
                 <div class="input col-xs-12 col-sm-6 col-md-3">
                     <label for="email" class="form-label">E-mail</label>
@@ -40,6 +56,8 @@
             </div>
         </form>
     </section>
+
+    <!-- Display database content -->
     <section class="container my-5">
         <table class="table table-striped">
             <thead>
@@ -54,41 +72,35 @@
                 </tr>
             </thead>
             <tbody>
+
+                <!-- Loop on each data row and display it inside html table -->
+                <?php
+                foreach ($dbarray as $row) { ?>
+                    <tr>
+                        <td><?= $row['surname'] ?></td>
+                        <td><?= $row['lastname'] ?></td>
+                        <td><?= $row['email'] ?></td>
+                        <td><?= $row['password'] ?></td>
+                        <td><?= $row['timestamp'] ?></td>
+                        <td><?= $row['videos'] ?></td>
+                        <td>
+                            <button class="btn btn-danger m-1">Supprimer</button>
+                            <button class="btn btn-secondary m-1">Acheter vidéo 2</button>
+                            <button class="btn btn-secondary m-1">Acheter vidéo 3</button>
+                        </td>
+                    </tr>
+                <?php } ?>
+
+                <!-- One row of fake data for testing purposes - TO BE DELETED -->
                 <tr>
                     <td>Jean</td>
                     <td>Dupont</td>
                     <td>jean.dupont@gmail.com</td>
                     <td>1234</td>
-                    <td>04/11/2021 08:13</td>
-                    <td>Aucune</td>
+                    <td>2021-11-04 08:30:53</td>
+                    <td></td>
                     <td>
-                        <button class="btn btn-secondary m-1">Acheter vidéo 1</button>
-                        <button class="btn btn-secondary m-1">Acheter vidéo 2</button>
-                        <button class="btn btn-secondary m-1">Acheter vidéo 3</button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Jean</td>
-                    <td>Dupont</td>
-                    <td>jean.dupont@gmail.com</td>
-                    <td>1234</td>
-                    <td>04/11/2021 08:13</td>
-                    <td>Aucune</td>
-                    <td>
-                        <button class="btn btn-secondary m-1">Acheter vidéo 1</button>
-                        <button class="btn btn-secondary m-1">Acheter vidéo 2</button>
-                        <button class="btn btn-secondary m-1">Acheter vidéo 3</button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Jean</td>
-                    <td>Dupont</td>
-                    <td>jean.dupont@gmail.com</td>
-                    <td>1234</td>
-                    <td>04/11/2021 08:13</td>
-                    <td>Aucune</td>
-                    <td>
-                        <button class="btn btn-secondary m-1">Acheter vidéo 1</button>
+                        <button class="btn btn-danger m-1">Supprimer</button>
                         <button class="btn btn-secondary m-1">Acheter vidéo 2</button>
                         <button class="btn btn-secondary m-1">Acheter vidéo 3</button>
                     </td>
