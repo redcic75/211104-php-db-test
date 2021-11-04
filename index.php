@@ -1,4 +1,6 @@
 <!DOCTYPE html>
+<!-- TODO: refactor code -->
+<!-- TODO: include a file with SQL instructions to build the initial databases -->
 <html lang="fr">
 
 <head>
@@ -16,22 +18,38 @@
     // Connect to database
     $pdo = new PDO('mysql:dbname=pdo_test;host=127.0.0.1', 'root', '');
 
-    // Delete data if a "Supprimer" button was clicked
+    // Delete a subscriber 
     if (isset($_POST['delete'])) {
         $req_del = $pdo->prepare('DELETE FROM subscribers WHERE id=? LIMIT 1');
-        $req_del->execute(array($_POST['delete']));
+        $req_del->execute(array($_POST['id']));
+        // TODO: also delete purchases made by the deleted subscriber
     }
 
-    // Add $_POST data to database
-    if (isset($_POST['surname'])) {
-        $req_add = $pdo->prepare('INSERT INTO subscribers VALUES (NULL, ?, ?, ?, ?, NULL, \'\')');
-        $req_add->execute(array($_POST['surname'], $_POST['lastname'], $_POST['email'], $_POST['password']));
+    // Add a subscriber 
+    if (isset($_POST['button'])) {
+        $req_add = $pdo->prepare('INSERT INTO subscribers VALUES (NULL, ?, ?, ?, ?, NULL)');
+        $req_add->execute(array($_POST['firstname'], $_POST['lastname'], $_POST['email'], $_POST['password']));
     }
 
-    // Store data retrieved in database into dbarray
-    $req_disp = $pdo->prepare('SELECT * FROM subscribers');
+    // Add a purchase 
+    if (isset($_POST['buy'])) {
+        // List videos already bought
+        $req_purchase = $pdo->prepare('SELECT id_video FROM purchases WHERE id_subscriber=?');
+        $req_purchase->execute(array($_POST['id']));
+        $purchases = $req_purchase->fetchAll(PDO::FETCH_COLUMN, 0); // purchase is an array whose values are the ids of the videos already bought
+
+        // If video has not already been purchased, add a line to the "purchases" database
+        if (!in_array($_POST['buy'], $purchases)) {
+            $req_buy = $pdo->prepare('INSERT INTO purchases VALUES (NULL, ?, ?, NULL)');
+            $req_buy->execute(array(($_POST['id']), $_POST['buy']));
+        }
+    }
+
+    // Build $subscribers_array with all data needed to display the html table
+    $req_disp = $pdo->prepare('SELECT subscribers.id, subscribers.firstname, subscribers.lastname, subscribers.email, subscribers.password, subscribers.timestamp, GROUP_CONCAT(purchases.id_video) AS id_video
+    FROM subscribers LEFT JOIN purchases ON subscribers.id = purchases.id_subscriber GROUP BY subscribers.id');
     $req_disp->execute();
-    $dbarray = $req_disp->fetchAll();
+    $subscribers_array = $req_disp->fetchAll(pdo::FETCH_ASSOC);
     ?>
 
     <!-- Forms to input new data into database -->
@@ -39,8 +57,8 @@
         <form action="index.php" method="POST">
             <div class="row py-3">
                 <div class="input col-xs-12 col-sm-6 col-md-3">
-                    <label for="surname" class="form-label">Prénom</label>
-                    <input type="text" id="surname" name="surname" class="form-control" required>
+                    <label for="firstname" class="form-label">Prénom</label>
+                    <input type="text" id="firstname" name="firstname" class="form-control">
                 </div>
                 <div class="input col-xs-12 col-sm-6 col-md-3">
                     <label for="lastname" class="form-label">Nom</label>
@@ -57,7 +75,7 @@
             </div>
             <div class="row">
                 <div class="col-xs-12 col-sm-6 col-md-3">
-                    <button type="submit" class="btn btn-primary w-100">
+                    <button type="submit" class="btn btn-primary w-100" name="button" value="">
                         Soumettre
                     </button>
                 </div>
@@ -82,19 +100,21 @@
             <tbody>
                 <!-- Loop on each data row and display it inside html table -->
                 <?php
-                foreach ($dbarray as $row) { ?>
+                foreach ($subscribers_array as $row) { ?>
                     <tr>
-                        <td><?= $row['surname'] ?></td>
+                        <td><?= $row['firstname'] ?></td>
                         <td><?= $row['lastname'] ?></td>
                         <td><?= $row['email'] ?></td>
                         <td><?= $row['password'] ?></td>
                         <td><?= $row['timestamp'] ?></td>
-                        <td><?= $row['videos'] ?></td>
+                        <td><?= $row['id_video'] ?></td>
                         <td>
                             <form action="index.php" method="post">
-                                <button class="btn btn-danger m-1" name="delete" value=<?= $row['id']?>>Supprimer</button>
-                                <button class="btn btn-secondary m-1" name="buy" value="1">Acheter vidéo 1</button>
-                                <button class="btn btn-secondary m-1" name="buy" value="2">Acheter vidéo 2</button>
+                                <input type="hidden" name="id" value=<?= $row['id'] ?>>
+                                <button class="btn btn-danger m-1" name="delete" value=''>Supprimer</button>
+                                <!-- TODO: do not display the button to buy a given video when this video has already been bought -->
+                                <button class="btn btn-secondary m-1" name="buy" value=1>Acheter vidéo 1</button>
+                                <button class="btn btn-secondary m-1" name="buy" value=2>Acheter vidéo 2</button>
                             </form>
                         </td>
                     </tr>
