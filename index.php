@@ -22,7 +22,8 @@
     if (isset($_POST['delete'])) {
         $req_del = $pdo->prepare('DELETE FROM subscribers WHERE id=? LIMIT 1');
         $req_del->execute(array($_POST['id']));
-        // TODO: also delete purchases made by the deleted subscriber
+        $req_del = $pdo->prepare('DELETE FROM purchases WHERE id_subscriber=?');
+        $req_del->execute(array($_POST['id']));
     }
 
     // Add a subscriber 
@@ -44,12 +45,6 @@
             $req_buy->execute(array(($_POST['id']), $_POST['buy']));
         }
     }
-
-    // Build $subscribers_array with all data needed to display the html table
-    $req_disp = $pdo->prepare('SELECT subscribers.id, subscribers.firstname, subscribers.lastname, subscribers.email, subscribers.password, subscribers.timestamp, GROUP_CONCAT(purchases.id_video) AS id_video
-    FROM subscribers LEFT JOIN purchases ON subscribers.id = purchases.id_subscriber GROUP BY subscribers.id');
-    $req_disp->execute();
-    $subscribers_array = $req_disp->fetchAll(pdo::FETCH_ASSOC);
     ?>
 
     <!-- Forms to input new data into database -->
@@ -98,8 +93,11 @@
                 </tr>
             </thead>
             <tbody>
-                <!-- Loop on each data row and display it inside html table -->
                 <?php
+                // Build $subscribers_array with all data needed to display the html table
+                $req_disp = $pdo->prepare('SELECT subscribers.id, subscribers.firstname, subscribers.lastname, subscribers.email, subscribers.password, subscribers.timestamp, GROUP_CONCAT(purchases.id_video ORDER BY purchases.id_video ASC) AS id_video FROM subscribers LEFT JOIN purchases ON subscribers.id = purchases.id_subscriber GROUP BY subscribers.id');
+                $req_disp->execute();
+                $subscribers_array = $req_disp->fetchAll(pdo::FETCH_ASSOC);
                 foreach ($subscribers_array as $row) { ?>
                     <tr>
                         <td><?= $row['firstname'] ?></td>
