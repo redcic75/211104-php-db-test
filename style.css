@@ -1,1 +1,4 @@
-
+.btn-fixed-width {
+    width: 7em;
+    text-align: center;
+}
