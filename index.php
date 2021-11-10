@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <!-- TODO: Add exception management -->
+<!-- TODO: Add server side verification of input formats (string lengths, email regex...) -->
 <html lang="fr">
 
 <head>
@@ -16,10 +17,7 @@
 
     <?php
     // Connect to database
-    $host = '127.0.0.1';
-    $db = 'pdo_test';
-    $user = 'root';
-    $password = '';
+    require_once('config.php'); // Config.php contains the following credentials variables (strings) : $host, $db, $user, $password
     $pdo = new PDO("mysql:dbname=$db;host=$host", $user, $password);
 
     // Add a subscriber 
